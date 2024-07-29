@@ -6,13 +6,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <freertos/FreeRTOS.h>
-#include <hal/Timing/Time.h>
+#include <freertos/FreeRTOS.h>s
 #include "hal/Drivers/I2C.h"
 #include <hal/Utility/util.h>
 #include "satellite-subsystems/demo/src/Demos/payload_TLM.h"
 #include "satellite-subsystems/demo/src/Demos/payload_experiments.h"
-
+#include <time.h>
 #define MAX_FILE_NAME_SIZE 50
 #define END_FILE_NAME_RADFET "radfet"
 #define END_FILE_NAME_TEMP "temp"
@@ -28,6 +27,18 @@ void getExpData(PayloadExperiment exp, char* endFileName, int* structSize){
 
 }
 
+void calculateFileName(Time curr_date,char* file_name, char* endFileName, int days2Add)
+{
+	/* initialize */
+	struct tm t = { .tm_year = curr_date.year + 100, .tm_mon = curr_date.month - 1, .tm_mday = curr_date.date };
+	/* modify */
+	t.tm_mday += days2Add;
+	mktime(&t);
+
+	char buff[7];
+	strftime(buff, sizeof buff, "%y%0m%0d", &t);
+	snprintf(file_name, MAX_FILE_NAME_SIZE, "%s.%s", buff, endFileName);
+}
 
 Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 	//printf("writing tlm: %d to SD\n",tlmType);
@@ -44,10 +55,8 @@ Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 	char end_file_name[3] = {0};
 
 	getTlmTypeInfo(exp,end_file_name,&size);
-	calculateFileName(curr_date,&file_name,end_file_name , 0);
+	calculateFileName(curr_date,&file_name,end_file_name,0);
 	fp = f_open(file_name, "a");
-
-	int err = f_getlasterror();
 
 	if (!fp)
 	{
