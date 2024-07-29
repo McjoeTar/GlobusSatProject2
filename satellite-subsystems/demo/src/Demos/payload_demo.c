@@ -93,6 +93,15 @@ ADCResult retrieveADCData(unsigned char sample[4])
     }
     return ADC_INVALID;
 }
+
+Boolean getTimestamp(int *expTime){
+    Time_getUnixEpoch(expTime);
+    if(expTime == NULL)
+    {
+        return FALSE;
+    }
+    return TRUE;
+}
 Boolean clearWatchdog(ActionData* action){
     unsigned char* buffer = malloc(sizeof(unsigned char)*3);
     if(buffer == NULL){
@@ -160,6 +169,10 @@ Boolean masterPIC32SELWrite(PIC32SELData *pic32sel)
         free(buffer);
         return FALSE;
     }
+    if (!getTimestamp(&pic32sel->expTime))
+    {
+        printf("Error when trying to get the timestamp for experiment pic32SEL.\n");
+    }
     extractOpcode(&pic32sel->OPCODE, buffer);
     *pic32sel->PIC32SEL = buffer[3] << 24 | buffer[4] << 16 | buffer[5] << 8 | buffer[6];
     *pic32sel->PIC32SELBACKUP = buffer[7] << 24 | buffer[8] << 16 | buffer[9] << 8 | buffer[10];
@@ -167,6 +180,7 @@ Boolean masterPIC32SELWrite(PIC32SELData *pic32sel)
     changeIntIndian(pic32sel->COUNTPIC32SEL);
     memcpy(pic32sel->COUNTPIC32SELBACKUP,pic32sel->PIC32SELBACKUP,4);
     changeIntIndian(pic32sel->COUNTPIC32SELBACKUP);
+    
     free(buffer);
     return TRUE;
     
@@ -191,6 +205,10 @@ Boolean masterPIC32SEUWrite(PIC32SEUData *pic32seu)
         printf("Data is not ready.\n");
         free(buffer);
         return FALSE;
+    }
+    if (!getTimestamp(&pic32seu->expTime))
+    {
+        printf("Error when trying to get the timestamp for experiment pic32SEU.\n");
     }
     extractOpcode(&pic32seu->OPCODE, buffer);
     *pic32seu->PIC32SEU = buffer[3] << 24 | buffer[4] << 16 | buffer[5] << 8 | buffer[6];
@@ -217,7 +235,10 @@ Boolean masterRadiationWrite(RadiationData* rad)
         free(buffer);
         return FALSE;
     }
-    
+    if (!getTimestamp(&rad->expTime))
+    {
+        printf("Error when trying to get the timestamp for experiment pic32SEL.\n");
+    }
     extractOpcode(&rad->OPCODE, buffer);
     *rad->RADFET1 = buffer[3] << 24 | buffer[4] << 16 | buffer[5] << 8 | buffer[6];
     if (retrieveADCData(rad->RADFET1) != ADC_VALID) //TODO: Should we address PROCESSING?
@@ -255,6 +276,10 @@ Boolean MasterTemperatureWrite(TemperatureData * temprature)
         free(buffer);
         return FALSE;
     }
+    if (!getTimestamp(&temprature->expTime))
+    {
+        printf("Error when trying to get the timestamp for experiment pic32SEL.\n");
+    }
     extractOpcode(&temprature->OPCODE, buffer);
     *temprature->TEMP = buffer[3] << 24 | buffer[4] << 16 | buffer[5] << 8 | buffer[6];
     if (retrieveADCData(temprature->TEMP) != ADC_VALID) //TODO: Should we address PROCESSING?
@@ -265,8 +290,13 @@ Boolean MasterTemperatureWrite(TemperatureData * temprature)
     free(buffer);
     return TRUE;
 }
-Boolean soreqDebugging(char buffer[12])
+Boolean soreqDebugging()
 {
+    unsigned char* buffer = malloc(sizeof(unsigned char)*12); //TODO: check if we need 12 or lower? (11 Bytes).
+    if(buffer == NULL){
+        printf("Memory allocation failed.\n");
+        return FALSE;
+    }
     SoreqResult res = payloadSendCommand(SOREQ_DEBUGGING, 12, buffer, 0);
     if (res != PAYLOAD_SUCCESS)
     {

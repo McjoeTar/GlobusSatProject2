@@ -27,6 +27,13 @@ typedef enum {
 #define END_FILE_NAME_PIC32SEL "pic32sel"
 #define END_FILE_NAME_PIC32SEU "pic32seu"
 
+typedef struct {
+
+    void *data;
+    Time time;
+    readData *next;
+
+} readData;
 
 Boolean payloadWriteToFile(void* data, PayloadExperiment exp);
 

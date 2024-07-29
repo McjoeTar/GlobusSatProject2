@@ -25,12 +25,14 @@ typedef struct {
     unsigned char RADFET1[4];
     unsigned char RADFET2[4];
     unsigned char OPCODE[2];
+    Time expTime;
 } RadiationData;
 
 typedef struct {
     unsigned char STATUS[1];
     unsigned char TEMP[4];
     unsigned char OPCODE[2];
+    Time expTime;
 } TemperatureData;
 
 typedef struct {
@@ -40,18 +42,22 @@ typedef struct {
     int* COUNTPIC32SEL;
     unsigned char PIC32SELBACKUP[4];
     int* COUNTPIC32SELBACKUP;
+    Time expTime;
 } PIC32SELData;
 
 typedef struct {
     unsigned char STATUS[1];
     unsigned char OPCODE[2];
     unsigned char PIC32SEU[4];
+    Time expTime;
 } PIC32SEUData;
 
 typedef struct {
     unsigned char STATUS[1];
     unsigned char OPCODE[2];
+    Time expTime;
 } ActionData;
+
 
 
 #endif /* ISIS_SOREQ_PAYLOAD_EXPERIMENTS_H_ */
