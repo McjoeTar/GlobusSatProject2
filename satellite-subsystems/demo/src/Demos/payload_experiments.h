@@ -5,8 +5,8 @@
  *      Author: malv
  */
 
-#ifndef ISIS_SOREQ_PAYLOAD_TLM_H_
-#define ISIS_SOREQ_PAYLOAD_TLM_H_
+#ifndef ISIS_SOREQ_PAYLOAD_EXPERIMENTS_H_
+#define ISIS_SOREQ_PAYLOAD_EXPERIMENTS_H_
 #include <hal/boolean.h>
 #include <hal/Timing/Time.h>
 
@@ -20,10 +20,38 @@ typedef enum {
     RADFET, TEMP, PIC32SEL, PIC32SEU
 } PayloadExperiment;
 
-Boolean payloadWriteToFile(void* data, PayloadExperiment exp);
+typedef struct {
+    unsigned char STATUS[1];
+    unsigned char RADFET1[4];
+    unsigned char RADFET2[4];
+    unsigned char OPCODE[2];
+} RadiationData;
 
-Boolean payloadReadFromFile(PayloadExperiment exp, Time startTime, Time endTime);
+typedef struct {
+    unsigned char STATUS[1];
+    unsigned char TEMP[4];
+    unsigned char OPCODE[2];
+} TemperatureData;
 
-Boolean patloadDeleteFromFile(PayloadExperiment exp, Time startTime, Time endTime);
+typedef struct {
+    unsigned char STATUS[1];
+    unsigned char OPCODE[2];
+    unsigned char PIC32SEL[4];
+    int* COUNTPIC32SEL;
+    unsigned char PIC32SELBACKUP[4];
+    int* COUNTPIC32SELBACKUP;
+} PIC32SELData;
 
-#endif /* ISIS_SOREQ_PAYLOAD_TLM_H_ */
+typedef struct {
+    unsigned char STATUS[1];
+    unsigned char OPCODE[2];
+    unsigned char PIC32SEU[4];
+} PIC32SEUData;
+
+typedef struct {
+    unsigned char STATUS[1];
+    unsigned char OPCODE[2];
+} ActionData;
+
+
+#endif /* ISIS_SOREQ_PAYLOAD_EXPERIMENTS_H_ */
