@@ -17,11 +17,8 @@
  * Returns FALSE on failure to initialize.
  */
 
-typedef enum {
-    RADFET, TEMP, PIC32SEL, PIC32SEU
-} PayloadExperiment;
-
 #define MAX_FILE_NAME_SIZE 50
+#define MAX_FILE_LINE_SIZE 100
 #define END_FILE_NAME_RADFET "radfet"
 #define END_FILE_NAME_TEMP "temp"
 #define END_FILE_NAME_PIC32SEL "pic32sel"
@@ -37,8 +34,10 @@ typedef struct {
 
 Boolean payloadWriteToFile(void* data, PayloadExperiment exp);
 
-Boolean payloadReadFromFile(PayloadExperiment exp, Time startTime, Time endTime);
+Boolean payloadReadFromFile(PayloadExperiment exp, Time* readStartTime, Time* readEndTime, readData *head);
 
-Boolean payloadDeleteFromFile(PayloadExperiment exp, Time startTime, Time endTime);
+Boolean payloadDeleteFromFile(PayloadExperiment exp, Time* deleteStartTime, Time* deleteEndTime);
+
+Boolean payloadDeleteAllExpFile(PayloadExperiment exp);
 
 #endif /* ISIS_SOREQ_PAYLOAD_TLM_H_ */

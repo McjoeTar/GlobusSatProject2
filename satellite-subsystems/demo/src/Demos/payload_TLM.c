@@ -78,6 +78,36 @@ void writeExpTelemetry(F_FILE *fp,PayloadExperiment exp, void* data){
     }
 }
 
+Boolean testTimes(Time* startTime, Time* endTime){
+
+	int startTimeEpoch = Time_convertTimeToEpoch(startTime);
+	int endTimeEpoch = Time_convertTimeToEpoch(endTime);
+	int currentTimeEpoch = Time_convertTimeToEpoch(Time_get());
+
+
+	if (startTimeEpoch > endTimeEpoch){
+		printf("Start time is greater than end time\n");
+		return FALSE;
+	}
+
+	if(startTimeEpoch < 0 || endTimeEpoch < 0){
+		printf("Invalid time\n");
+		return FALSE;
+	}
+
+	if(startTimeEpoch == endTimeEpoch){
+		printf("Start time is equal to end time\n");
+		return FALSE;
+	}
+
+	if(startTimeEpoch > currentTimeEpoch){
+		printf("Start time is in the future\n");
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
 Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 
 	int size;
@@ -103,44 +133,58 @@ Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 }
 
 
-Boolean payloadDeleteFromFile(PayloadExperiment exp, Time startTime, Time endTime){
-	//printf("writing tlm: %d to SD\n",tlmType);
+Boolean payloadDeleteAllExpFile(PayloadExperiment exp){
+	int size;
+	char file_name[MAX_FILE_NAME_SIZE] = {0};
+	getExpName(exp,file_name,&size);
+	f_delete(*file_name);
+}
+
+Boolean payloadDeleteFromFile(PayloadExperiment exp, Time* deleteStartTime, Time* deleteEndTime){
+
+	if(!testTimes(deleteStartTime,deleteEndTime)){
+		printf("Invalid times\n");
+		return FALSE;
+	}
 
 	int size;
 	F_FILE *fp,*fp_backup;
 	char rowTime[MAX_FILE_NAME_SIZE] = {0};
 	char file_name[MAX_FILE_NAME_SIZE] = {0};
 
-	getExpName(exp,file_name,&size);
+	getExpName(exp,&file_name,&size);
 	fp = f_open(file_name, "r");
 	if (!fp)
 	{
 		printf("Unable to open file %s\n",file_name);
-		return -1;
+		return FALSE;
 	}
 	fp_backup = f_open("temp", "w");
 	if (!fp_backup)
 	{
 		printf("Unable to open file %s%s\n",file_name,"temp");
-		return -1;
+		return FALSE;
 	}
-	int startTimeEpoch = Time_convertTimeToEpoch(&startTime);
-	int endTimeEpoch = Time_convertTimeToEpoch(&endTime);
+	int startTimeEpoch = Time_convertTimeToEpoch(deleteStartTime);
+	int endTimeEpoch = Time_convertTimeToEpoch(deleteEndTime);
+	char rowData[size];
 
 	while (f_eof(fp) == 0)
 	{
-		f_read(rowTime, size, MAX_FILE_NAME_SIZE, fp);
+		f_read(rowTime, sizeof(int), 1, fp);
 		if (atoi(rowTime) < startTimeEpoch || atoi(rowTime) > endTimeEpoch)
-		{
-			// Delete the row
-
+		{	
+			f_write(rowTime, sizeof(int), 1, fp_backup);
+			f_read(rowData, size, 1, fp);
+			f_write(rowData, size, 1, fp_backup);
+			f_write("\n", 1, 1, fp_backup);
 		}
 	}
-	{
-		/* code */
-	}
-	
 
+	f_close(fp);
+	f_delete(*file_name);
+	f_rename("temp",file_name);
+	f_close(fp_backup);
 }
 
 Boolean determineExp(PayloadExperiment exp, int* size,void* data){
@@ -148,35 +192,43 @@ Boolean determineExp(PayloadExperiment exp, int* size,void* data){
 		*size = sizeof(RadiationData);
 		data = malloc(*size);
 		if(data == NULL){
+			printf("Memory allocation failed.\n");
 			return FALSE;
 		}
 		data = (RadiationData*)data;
+		return TRUE;
 	}
 	else if (exp==TEMP){
 		*size = sizeof(TemperatureData);
 		data = malloc(*size);
 		if(data == NULL){
+			printf("Memory allocation failed.\n");
 			return FALSE;
 		}
 		data = (TemperatureData*)data;
+		return TRUE;
 	}
 	else if (exp==PIC32SEL){
 		*size = sizeof(PIC32SELData);
 		data = malloc(*size);
 		if(data == NULL){
+			printf("Memory allocation failed.\n");
 			return FALSE;
 		}
 		data = (PIC32SELData*)data;
+		return TRUE;
 	}
 	else if (exp==PIC32SEU){
 		*size = sizeof(PIC32SEUData);
 		data = malloc(*size);
 		if(data == NULL){
+			printf("Memory allocation failed.\n");
 			return FALSE;
 		}
 		data = (PIC32SEUData*)data;
+		return TRUE;
 	}
-	return TRUE;
+	return FALSE;
 }
 
 Boolean readTempData(F_FILE *fp, TemperatureData *tempData){
@@ -205,12 +257,24 @@ Boolean readPIC32SEUData(F_FILE *fp, PIC32SEUData *picSeuData){
 	f_read(picSeuData->PIC32SEU, sizeof(picSeuData->PIC32SEU), 1, fp);
 }
 
-Boolean payloadReadFromFile(PayloadExperiment exp, Time startTime, Time endTime, char* data){
+Boolean payloadReadFromFile(PayloadExperiment exp, Time* readStartTime, Time* readEndTime, readData *head){
 	
+	if(head == NULL){
+		printf("Head is NULL\n");
+		return FALSE;
+	}
+	if(!testTimes(readStartTime,readEndTime)){
+		printf("Invalid times\n");
+		return FALSE;
+	}
+
 	int size;
 	F_FILE *fp;
-	char rowTime[MAX_FILE_NAME_SIZE] = {0};
-	char file_name[MAX_FILE_NAME_SIZE] = {0};
+	char rowTime[MAX_FILE_NAME_SIZE];
+	char file_name[MAX_FILE_NAME_SIZE];
+	int startTimeEpoch = Time_convertTimeToEpoch(readStartTime);
+	int endTimeEpoch = Time_convertTimeToEpoch(readEndTime);
+	readData* current = head;
 
 	getExpName(exp,file_name,&size);
 	fp = f_open(file_name, "r");
@@ -226,28 +290,45 @@ Boolean payloadReadFromFile(PayloadExperiment exp, Time startTime, Time endTime,
 	}
 
 	while(f_eof(fp) == 0){
-		f_read(rowTime, size, MAX_FILE_NAME_SIZE, fp);
-		if (atoi(rowTime) >= startTime && atoi(rowTime) <= endTime){
+		f_read(rowTime, size, 1, fp);
+		if (atoi(rowTime) >= startTimeEpoch && atoi(rowTime) <= endTimeEpoch){
 			switch (exp) {
 				case RADFET: {
-					readRadData(fp,(RadiationData*)rowData);
+					readRadData(fp,rowData);
 					break;
 				}
 				case TEMP: {
-					readTempData(fp,(TemperatureData*)rowData);
+					readTempData(fp,rowData);
 					break;
 				}
 				case PIC32SEL: {
-					readPIC32SELData(fp,(PIC32SELData*)rowData);
+					readPIC32SELData(fp,rowData);
 					break;
 				}
 				case PIC32SEU: {
-					readPIC32SEUData(fp,(PIC32SEUData*)rowData);
+					readPIC32SEUData(fp,rowData);
 					break;
 				}
-				default:
-					break;
 			}
 		}
+		if(head->data == NULL){
+			head->data = rowData;
+			if(Time_convertEpochToTime(atoi(rowTime),&head->time)){
+				printf("Error converting epoch to time\n");
+				return FALSE;
+			}
+		}
+		else{
+			readData* new = malloc(sizeof(readData));
+			new->data = rowData;
+			if(Time_convertEpochToTime(atoi(rowTime),&new->time)){
+				printf("Error converting epoch to time\n");
+				return FALSE;
+			}
+			current->next = new;
+			current = new;
+		}
+
 	}
+	return TRUE;
 }
