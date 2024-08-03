@@ -1,8 +1,5 @@
 /*
- * IsisTRXVUdemo.h
- *
- *  Created on: 6 feb. 2015
- *      Author: malv
+ *  Created on: 03 aug. 2024
  */
 
 #ifndef ISIS_SOREQ_PAYLOAD_EXPERIMENTS_H_
@@ -20,18 +17,19 @@
 #define SOREQ_DEBUGGING 0x32
 #define CLEARWATCHDOG 0x3F
 #define SOFTRESET 0xF8
-#define OPCODE_MASTER_READ_FROM_PAYLOAD 0x45 // in tau-1
+#define OPCODE_MASTER_READ_FROM_PAYLOAD 0x45
 
 #define RADIATION_DELAY 2500
 #define Temperature_DELAY 1690
 #define PIC32SEL_DELAY 20
 #define PIC32SEU_DELAY 200
-#define CLEARWATCHDOG_DELAY 10 //TODO: What is the correct delay?
-#define SOFTRESET_DELAY 10 //TODO: What is the correct delay?
+#define CLEARWATCHDOG_DELAY 10
+#define SOFTRESET_DELAY 10
+
+
 /***
- * Starts demo.
- * Calls Init and Menu in sequence.
- * Returns FALSE on failure to initialize.
+ * This file contains the structures and enums for the different payload experiments.
+ * The experiments are Radiation, Temperature, PIC32SEL and PIC32SEU.
  */
 
 typedef enum {

@@ -13,9 +13,8 @@
 
 
 /***
- * Starts demo.
- * Calls Init and Menu in sequence.
- * Returns FALSE on failure to initialize.
+ * Contains all the functions to interact with the Soreq payload.
+ * The functions are used to send commands to the payload and read the results.
  */
 
 

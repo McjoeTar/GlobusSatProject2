@@ -12,6 +12,7 @@
 #include <hal/Utility/util.h>
 #include "satellite-subsystems/demo/src/Demos/payload_demo.h"
 #include "satellite-subsystems/demo/src/Demos/payload_experiments.h"
+#include "satellite-subsystems/demo/src/Demos/payload_TLM.h"
 
 
 
@@ -180,7 +181,7 @@ Boolean masterPIC32SELWrite(PIC32SELData *pic32sel)
     changeIntIndian(pic32sel->COUNTPIC32SEL);
     memcpy(pic32sel->COUNTPIC32SELBACKUP,pic32sel->PIC32SELBACKUP,4);
     changeIntIndian(pic32sel->COUNTPIC32SELBACKUP);
-    
+    payloadWriteToFile(pic32sel,PIC32SEL);
     free(buffer);
     return TRUE;
     
@@ -212,6 +213,7 @@ Boolean masterPIC32SEUWrite(PIC32SEUData *pic32seu)
     }
     extractOpcode(&pic32seu->OPCODE, buffer);
     *pic32seu->PIC32SEU = buffer[3] << 24 | buffer[4] << 16 | buffer[5] << 8 | buffer[6];
+    payloadWriteToFile(pic32seu,PIC32SEU);
     free(buffer);
     return TRUE;
 }
@@ -254,6 +256,7 @@ Boolean masterRadiationWrite(RadiationData* rad)
         free(buffer);
         return FALSE;
     }
+    payloadWriteToFile(rad,RADFET);
     free(buffer);
     return TRUE;
 }
@@ -288,6 +291,7 @@ Boolean MasterTemperatureWrite(TemperatureData * temprature)
         return FALSE;
     }
     free(buffer);
+    payloadWriteToFile(temprature,TEMP);
     return TRUE;
 }
 Boolean soreqDebugging()

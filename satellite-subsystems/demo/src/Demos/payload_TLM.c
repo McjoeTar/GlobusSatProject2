@@ -112,8 +112,8 @@ Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 
 	int size;
 	F_FILE *fp;
-	char curr_date_str[MAX_FILE_NAME_SIZE] = {0};
-	char file_name[MAX_FILE_NAME_SIZE] = {0};
+	char curr_date_str[6];
+	char file_name[MAX_FILE_NAME_SIZE];
 
 	getExpName(exp,file_name,&size);
 	fp = f_open(file_name, "a");
@@ -121,7 +121,7 @@ Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 	if (!fp)
 	{
 		//printf("Unable to open file %s, f_open error=%d\n",file_name, err);
-		return -1;
+		return FALSE;
 	}
 
 	writeExpTelemetry(fp,exp,data);
@@ -129,7 +129,7 @@ Boolean payloadWriteToFile(void* data, PayloadExperiment exp){
 	/* close the file*/
 	f_flush(fp);
 	f_close (fp);
-	return 0;
+	return TRUE;
 }
 
 
